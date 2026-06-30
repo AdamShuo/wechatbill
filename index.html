@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="微信账单分析器 - 安全的本地账单数据分析工具">
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='32' y2='32'><stop offset='0%' stop-color='%234F46E5'/><stop offset='100%' stop-color='%23818CF8'/></linearGradient></defs><circle cx='16' cy='16' r='16' fill='url(%23g)'/><text x='16' y='22' text-anchor='middle' font-size='18' fill='white'>¥</text></svg>">
+    <title>微信账单分析器 v1.1.14</title>
+
+    <!-- Tailwind CSS - 本地化，无网络依赖 -->
+    <link href="libs/tailwind.min.css" rel="stylesheet">
+
+    <!-- Chart.js - 核心图表库，本地化加载 -->
+    <script src="libs/chart.umd.min.js" defer></script>
+
+    <!-- SheetJS - Excel解析核心库，本地化加载 -->
+    <script src="libs/xlsx.full.min.js" defer></script>
+
+    <!-- html2canvas - 报告导出（非核心），本地化异步加载 -->
+    <script src="libs/html2canvas.min.js" async></script>
+
+    <!-- jsPDF - 报告导出（非核心），本地化异步加载 -->
+    <script src="libs/jspdf.umd.min.js" async></script>
+
+    <!-- 本地JS模块 - defer按顺序执行，不阻塞页面渲染 -->
+    <script src="js/utils.js" defer></script>
+    <script src="js/parser.js" defer></script>
+    <script src="js/typeManager.js" defer></script>
+    <script src="js/classifier.js" defer></script>
+    <script src="js/stats.js" defer></script>
+    <script src="js/chart.js" defer></script>
+    <script src="js/report.js" defer></script>
+    <script src="js/app.js" defer></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="dark-mode">
+    <!-- ★ v1.1.13: 移动端独立品牌名称栏（置顶显示） -->
+    <div class="nav-brand-bar">
+        <span class="nav-brand-bar-title">微信账单分析器</span>
+        <span class="version-badge">v1.1.14</span>
+    </div>
+
+    <!-- 顶部导航栏 -->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <svg class="logo" width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <circle cx="16" cy="16" r="16" fill="url(#gradient)"/>
+                    <path d="M8 16c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4-4-1.8-4-4zm8 0c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4-4-1.8-4-4zm-4 6c-2.2 0-6-1.2-6-3.5S11.8 15 16 15s6-2.2 6-4.5S18.2 7 16 7s-6 2.2-6 4.5 3.8 3.5 6 3.5z" fill="white"/>
+                    <defs>
+                        <linearGradient id="gradient" x1="0" y1="0" x2="32" y2="32">
+                            <stop offset="0%" stop-color="#4F46E5"/>
+                            <stop offset="100%" stop-color="#818CF8"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <h1 class="nav-title">微信账单分析器</h1>
+                <span class="version-badge">v1.1.14</span>
+            </div>
+            
+            <nav class="nav-menu">
+                <button class="nav-btn active" data-page="upload">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10 3v10m0-10L7 6m3-3L13 6M3 13v4h14v-4"/>
+                    </svg>
+                    <span>数据上传</span>
+                </button>
+                <button class="nav-btn" data-page="list">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M3 4h14v2H3zm0 5h14v2H3zm0 5h14v2H3z"/>
+                    </svg>
+                    <span>账单明细</span>
+                </button>
+                <button class="nav-btn" data-page="stats">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                        <path d="M3 17V9m4 8V5m4 12V8m4 9V3"/>
+                    </svg>
+                    <span>统计分析</span>
+                </button>
+                <button class="nav-btn" data-page="category">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M3 3h6v6H3zm8 0h6v6h-6zM3 11h6v6H3zm8 0h6v6h-6z"/>
+                    </svg>
+                    <span>智能分类</span>
+                </button>
+                <button class="nav-btn" data-page="query">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M3 10a7 7 0 1 1 14 0 7 7 0 0 1-14 0zm11 7 4 4"/>
+                    </svg>
+                    <span>交叉查询</span>
+                </button>
+                <button class="nav-btn" data-page="report">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M4 2h12v16H4zM4 8h12M4 14h8"/>
+                    </svg>
+                    <span>分析报告</span>
+                </button>
+            </nav>
+            
+            <div class="nav-actions">
+                <button class="theme-toggle" id="themeToggle" title="切换配色方案">
+                    <svg class="sun-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <circle cx="10" cy="10" r="4"/>
+                        <path d="M10 1v3m0 12v3M1 10h3m12 0h3M3.5 3.5l2 2m9 9 2 2m0-14-2 2m-9 9-2 2"/>
+                    </svg>
+                    <svg class="moon-icon" width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M17.3 13.3A7 7 0 0 1 6.7 2.7 7 7 0 1 0 17.3 13.3z"/>
+                    </svg>
+                    <span class="theme-toggle-text">配色方案</span>
+                </button>
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M3 6h18M3 12h18M3 18h18"/>
+                    </svg>
+                    <span class="mobile-menu-text">更多菜单</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+        <!-- 数据上传页面 -->
+        <section id="page-upload" class="page active">
+            <div class="container">
+                <div class="page-header">
+                    <h2>数据上传</h2>
+                    <p class="text-muted">支持单文件、分次上传和批量上传，所有数据仅在本地处理，确保隐私安全</p>
+                </div>
+                
+                <!-- ★ v1.1.12: 微信账单导出教程区域（上传窗口上方，点击悬浮提示） -->
+                <div class="tutorial-area" id="tutorialArea">
+                    <div class="tutorial-trigger" id="tutorialTrigger">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M9 9a3 3 0 1 1 4.2 2.8L12 15"/>
+                            <line x1="12" y1="17.5" x2="12" y2="17.5" stroke-width="3" stroke-linecap="round"/>
+                        </svg>
+                        <span>💡 如何导出微信账单？</span>
+                        <svg class="tutorial-arrow" width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 13L5 8h10l-5 5z"/>
+                        </svg>
+                    </div>
+                    <div class="tutorial-popup" id="tutorialPopup">
+                        <div class="tutorial-popup-header">
+                            <h4>📱 微信账单导出教程</h4>
+                            <button class="tutorial-popup-close" id="tutorialPopupClose">&times;</button>
+                        </div>
+                        <div class="tutorial-popup-body">
+                            <div class="tutorial-step">
+                                <div class="tutorial-step-num">1</div>
+                                <div class="tutorial-step-text">
+                                    <strong>打开微信App</strong>
+                                    <p>进入「我」→「服务」→「钱包」→「账单」</p>
+                                </div>
+                            </div>
+                            <div class="tutorial-step">
+                                <div class="tutorial-step-num">2</div>
+                                <div class="tutorial-step-text">
+                                    <strong>进入下载账单页面</strong>
+                                    <p>点击右上方三个小点「···」，然后点击「下载账单」，选择「用于个人对账」</p>
+                                </div>
+                            </div>
+                            <div class="tutorial-step">
+                                <div class="tutorial-step-num">3</div>
+                                <div class="tutorial-step-text">
+                                    <strong>选择账单范围</strong>
+                                    <p>接收方式选择「微信」，再选择「自定义时间」，设定最大跨度<span style="color:#4F46E5;">一年</span>的时间区间，交易类型选择「全部」，然后点击「下一步」进行人脸验证，按引导完成即可</p>
+                                </div>
+                            </div>
+                            <div class="tutorial-step">
+                                <div class="tutorial-step-num">4</div>
+                                <div class="tutorial-step-text">
+                                    <strong>下载账单文件</strong>
+                                    <p>完成人脸验证后稍等片刻，等「微信支付」发来消息，打开消息点击「查看详情」，然后选择「在浏览器中打开」即可直接下载 <code>.xlsx</code> 账单文件</p>
+                                </div>
+                            </div>
+                            <div class="tutorial-tips">
+                                <p>💡 <strong>小技巧：</strong>微信每次最多支持导出<span style="color:#4F46E5;">一年</span>的账单。如需分析多年数据，可多次请求不同时间段，分批上传汇总分析。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="upload-section">
+                    <div class="upload-zone" id="uploadZone">
+                        <svg class="upload-icon" width="64" height="64" viewBox="0 0 64 64" fill="none">
+                            <rect x="8" y="16" width="48" height="36" rx="4" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4"/>
+                            <path d="M32 24v16m0-16L24 32m8-8 8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <h3>拖拽Excel文件到此处</h3>
+                        <p class="upload-hint">或点击选择文件，支持 .xlsx 和 .xls 格式</p>
+                        <input type="file" id="fileInput" accept=".xlsx,.xls" multiple class="file-input-hidden"/>
+                        <button class="btn btn-primary" id="selectFileBtn">选择文件</button>
+                    </div>
+                    
+                    <div class="upload-progress" id="uploadProgress" style="display: none;">
+                        <div class="progress-header">
+                            <span>正在解析...</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="uploaded-files" id="uploadedFiles">
+                        <h4>已上传文件</h4>
+                        <div class="file-list" id="fileList"></div>
+                    </div>
+                </div>
+                
+                <div class="data-summary" id="dataSummary" style="display: none;">
+                    <div class="summary-card">
+                        <div class="summary-icon">
+                            <svg width="32" height="32" viewBox="0 0 32 32" fill="currentColor">
+                                <path d="M16 4v24M4 16h24"/>
+                            </svg>
+                        </div>
+                        <div class="summary-info">
+                            <span class="summary-label">总交易笔数</span>
+                            <span class="summary-value" id="totalTransactions">0</span>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon income">
+                            <svg width="32" height="32" viewBox="0 0 32 32" fill="currentColor">
+                                <path d="M16 8v16M8 16l8-8 8 8"/>
+                            </svg>
+                        </div>
+                        <div class="summary-info">
+                            <span class="summary-label">总收入</span>
+                            <span class="summary-value income-value" id="totalIncome">¥0.00</span>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon expense">
+                            <svg width="32" height="32" viewBox="0 0 32 32" fill="currentColor">
+                                <path d="M16 8v16M8 16h16"/>
+                            </svg>
+                        </div>
+                        <div class="summary-info">
+                            <span class="summary-label">总支出</span>
+                            <span class="summary-value expense-value" id="totalExpense">¥0.00</span>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">
+                            <svg width="32" height="32" viewBox="0 0 32 32" fill="currentColor">
+                                <circle cx="16" cy="16" r="10"/>
+                            </svg>
+                        </div>
+                        <div class="summary-info">
+                            <span class="summary-label">时间跨度</span>
+                            <span class="summary-value" id="timeSpan">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="clear-data-area" id="clearDataArea" style="display: none;">
+                    <div class="clear-data-box">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M6 2h8v2H6zm-2 3h12v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5zm3 2v8h2V7H7zm4 0v8h2V7h-2z"/>
+                        </svg>
+                        <span>已导入 <strong id="clearDataCount">0</strong> 条记录</span>
+                        <button class="btn btn-danger-clear" id="clearAllDataBtn">一键清除</button>
+                    </div>
+                </div>
+
+
+            </div>
+        </section>
+
+        <!-- 账单明细页面 -->
+        <section id="page-list" class="page">
+            <div class="container">
+                <div class="page-header">
+                    <h2>账单明细</h2>
+                    <p class="text-muted">查看所有交易记录，支持分页浏览</p>
+                </div>
+                
+                <div class="table-controls">
+                    <div class="search-box">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" stroke-width="2"/>
+                            <path d="M13.5 13.5L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <input type="text" id="searchInput" placeholder="搜索交易对方、商品说明..."/>
+                    </div>
+                    <div class="sort-controls">
+                        <button class="btn btn-secondary" data-sort="time-desc">
+                            <span>最新优先</span>
+                        </button>
+                        <button class="btn btn-secondary" data-sort="time-asc">
+                            <span>最早优先</span>
+                        </button>
+                        <button class="btn btn-secondary" data-sort="amount-desc">
+                            <span>金额降序</span>
+                        </button>
+                        <button class="btn btn-secondary" data-sort="amount-asc">
+                            <span>金额升序</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="data-table" id="transactionTable">
+                        <thead>
+                            <tr>
+                                <th data-field="transactionTime">交易时间</th>
+                                <th data-field="transactionType">交易类型</th>
+                                <th data-field="counterparty">交易对方</th>
+                                <th data-field="description">商品说明</th>
+                                <th data-field="amount">金额</th>
+                                <th data-field="paymentMethod">支付方式</th>
+                                <th data-field="status">状态</th>
+                                <th data-field="category">分类</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr class="empty-row">
+                                <td colspan="8">
+                                    <div class="empty-state">
+                                        <svg width="48" height="48" viewBox="0 0 48 48" fill="currentColor">
+                                            <rect x="8" y="12" width="32" height="28" rx="4" fill="none" stroke="currentColor" stroke-width="2"/>
+                                            <path d="M8 20h32" stroke="currentColor" stroke-width="2"/>
+                                        </svg>
+                                        <p>暂无数据，请先上传账单文件</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="pagination" id="pagination">
+                    <button class="btn btn-secondary" id="prevPage" disabled>上一页</button>
+                    <span class="page-info" id="pageInfo">第 0 / 0 页</span>
+                    <button class="btn btn-secondary" id="nextPage" disabled>下一页</button>
+                    <select class="page-size-select" id="pageSizeSelect">
+                        <option value="20">20条/页</option>
+                        <option value="50" selected>50条/页</option>
+                        <option value="100">100条/页</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- 统计分析页面 -->
+        <section id="page-stats" class="page">
+            <div class="container">
+                <div class="page-header">
+                    <h2>统计分析</h2>
+                    <p class="text-muted">多维度数据分析，洞察消费趋势</p>
+                </div>
+                
+                <div class="key-metrics">
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2v20M2 12h20"/>
+                            </svg>
+                        </div>
+                        <div class="metric-info">
+                            <span class="metric-label">日均消费</span>
+                            <span class="metric-value" id="avgDailyExpense">¥0.00</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M3 12l4-8 4 16 4-12 4 8 2-4"/>
+                            </svg>
+                        </div>
+                        <div class="metric-info">
+                            <span class="metric-label">月均消费</span>
+                            <span class="metric-value" id="avgMonthlyExpense">¥0.00</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="12" cy="12" r="9"/>
+                                <path d="M12 7v5l3 3"/>
+                            </svg>
+                        </div>
+                        <div class="metric-info">
+                            <span class="metric-label">最大单笔</span>
+                            <span class="metric-value" id="maxTransaction">¥0.00</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M5 12h14M12 5v14"/>
+                            </svg>
+                        </div>
+                        <div class="metric-info">
+                            <span class="metric-label">交易频次</span>
+                            <span class="metric-value" id="transactionFrequency">0笔/月</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="period-selector">
+                    <button class="period-btn active" data-period="day">日</button>
+                    <button class="period-btn" data-period="week">周</button>
+                    <button class="period-btn" data-period="month">月</button>
+                    <button class="period-btn" data-period="year">年</button>
+                </div>
+                
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <h3>收支趋势</h3>
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>收入 vs 支出</h3>
+                        <canvas id="comparisonChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 智能分类页面 -->
+        <section id="page-category" class="page">
+            <div class="container">
+                <div class="page-header">
+                    <h2>智能分类</h2>
+                    <p class="text-muted">自动识别消费类型，支持手动调整</p>
+                </div>
+                
+                <div class="category-stats">
+                    <div class="chart-container large">
+                        <h3>分类占比</h3>
+                        <canvas id="categoryPieChart"></canvas>
+                    </div>
+                    <div class="chart-container large">
+                        <h3>分类对比</h3>
+                        <canvas id="categoryBarChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="category-management">
+                    <h3>分类规则管理</h3>
+                    <div class="category-rules" id="categoryRules"></div>
+                    <button class="btn btn-primary" id="addCategoryBtn">添加分类</button>
+                    <div class="type-management-panel" id="typeManagementPanel"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 交叉查询页面 -->
+        <section id="page-query" class="page">
+            <div class="container">
+                <div class="page-header">
+                    <h2>交叉查询</h2>
+                    <p class="text-muted">多维度组合筛选，精准查找交易记录</p>
+                </div>
+                
+                <div class="filter-panel">
+                    <div class="filter-grid">
+                        <div class="filter-item">
+                            <label>开始日期</label>
+                            <input type="date" id="filterStartDate"/>
+                        </div>
+                        <div class="filter-item">
+                            <label>结束日期</label>
+                            <input type="date" id="filterEndDate"/>
+                        </div>
+                        <div class="filter-item">
+                            <label>最小金额</label>
+                            <input type="number" id="filterMinAmount" placeholder="0.00"/>
+                        </div>
+                        <div class="filter-item">
+                            <label>最大金额</label>
+                            <input type="number" id="filterMaxAmount" placeholder="999999"/>
+                        </div>
+                        <div class="filter-item">
+                            <label>交易类型 <span class="filter-dynamic-hint">（动态提取）</span></label>
+                            <select id="filterType">
+                                <option value="">全部（加载中...）</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>交易对方</label>
+                            <input type="text" id="filterCounterparty" placeholder="模糊搜索"/>
+                        </div>
+                        <div class="filter-item">
+                            <label>支付方式</label>
+                            <select id="filterPayment">
+                                <option value="">全部</option>
+                                <option value="微信支付">微信支付</option>
+                                <option value="零钱">零钱</option>
+                                <option value="银行卡">银行卡</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>交易状态</label>
+                            <select id="filterStatus">
+                                <option value="">全部</option>
+                                <option value="成功">成功</option>
+                                <option value="失败">失败</option>
+                                <option value="处理中">处理中</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="filter-actions">
+                        <button class="btn btn-primary" id="applyFilterBtn">应用筛选</button>
+                        <button class="btn btn-secondary" id="resetFilterBtn">重置</button>
+                        <button class="btn btn-outline" id="saveFilterBtn">保存方案</button>
+                    </div>
+                </div>
+                
+                <div class="filter-results">
+                    <div class="results-summary">
+                        <span>找到 <strong id="filteredCount">0</strong> 条记录</span>
+                        <span>总支出: <strong id="filteredExpense">¥0.00</strong></span>
+                        <span>总收入: <strong id="filteredIncome">¥0.00</strong></span>
+                    </div>
+                    <div class="results-export" id="queryExportActions" style="display:none;">
+                        <button class="btn btn-primary btn-sm" id="exportQueryPDFBtn" title="导出为PDF（每页按当前条数分页）">
+                            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M6 2h8l4 4v12H2V2h4zm0 2H4v12h12V6.4L12.6 4H6zm4 4v4H8l4 4 4-4h-2v-4h-2z"/></svg>
+                            导出PDF
+                        </button>
+                        <button class="btn btn-success btn-sm" id="exportQueryExcelBtn" title="导出为Excel">
+                            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M6 2h8l4 4v12H2V2h4zm0 2H4v12h12V6.4L12.6 4H6zm2 6h4v2H8v-2z"/></svg>
+                            导出Excel
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table class="data-table" id="filterTable">
+                        <thead>
+                            <tr>
+                                <th>交易时间</th>
+                                <th>交易类型</th>
+                                <th>交易对方</th>
+                                <th>商品说明</th>
+                                <th>金额</th>
+                                <th>支付方式</th>
+                                <th>状态</th>
+                                <th>分类</th>
+                            </tr>
+                        </thead>
+                        <tbody id="filterTableBody"></tbody>
+                    </table>
+                </div>
+                
+                <div class="pagination" id="queryPagination">
+                    <button class="btn btn-secondary" id="queryPrevPage" disabled>上一页</button>
+                    <span class="page-info" id="queryPageInfo">第 0 / 0 页</span>
+                    <button class="btn btn-secondary" id="queryNextPage" disabled>下一页</button>
+                    <select class="page-size-select" id="queryPageSizeSelect">
+                        <option value="20">20条/页</option>
+                        <option value="50" selected>50条/页</option>
+                        <option value="100">100条/页</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- 分析报告页面 -->
+        <section id="page-report" class="page">
+            <div class="container">
+                <div class="page-header">
+                    <h2>分析报告</h2>
+                    <p class="text-muted">自动生成消费分析报告，支持导出PDF</p>
+                </div>
+                
+                <div class="report-actions">
+                    <button class="btn btn-primary" id="generateReportBtn">生成报告</button>
+                    <button class="btn btn-secondary" id="exportPDFBtn">导出PDF</button>
+                    <button class="btn btn-secondary" id="exportImageBtn">导出图片</button>
+                    <button class="btn btn-outline" id="printReportBtn">打印报告</button>
+                </div>
+                
+                <div class="report-content" id="reportContent">
+                    <div class="report-header">
+                        <h1>微信账单消费分析报告</h1>
+                        <p class="report-date">报告生成时间：<span id="reportDate"></span></p>
+                        <p class="report-period">分析期间：<span id="reportPeriod"></span></p>
+                    </div>
+                    
+                    <div class="report-section">
+                        <h2>一、消费习惯总结</h2>
+                        <div id="consumptionHabits"></div>
+                    </div>
+                    
+                    <div class="report-section">
+                        <h2>二、高频消费场景</h2>
+                        <div id="topMerchants"></div>
+                    </div>
+                    
+                    <div class="report-section">
+                        <h2>三、消费趋势分析</h2>
+                        <canvas id="reportTrendChart"></canvas>
+                    </div>
+                    
+                    <div class="report-section">
+                        <h2>四、异常交易提示</h2>
+                        <div id="abnormalTransactions"></div>
+                    </div>
+                    
+                    <div class="report-section">
+                        <h2>五、消费优化建议</h2>
+                        <div id="recommendations"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+</body>
+</html>

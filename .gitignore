@@ -1,0 +1,13 @@
+# 备份文件夹
+*-backup/
+
+# IDE
+.codebuddy/
+.vscode/
+
+# 打包文件
+*.zip
+
+# 系统文件
+.DS_Store
+Thumbs.db
