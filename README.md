@@ -4,6 +4,8 @@
 
 > 🌐 **在线预览**：[https://adamshuo.github.io/wechatbill/](https://adamshuo.github.io/wechatbill/) —— 无需下载，直接在浏览器中体验完整功能。
 
+> 🚀 **国内加速**：[https://app1.cloudstudio.site/wechatbill/](https://app1.cloudstudio.site/wechatbill/) —— 国内访问速度更快的备用地址。
+
 ## 项目简介
 
 微信账单分析器是一款**纯前端、零依赖框架**的个人财务分析工具。上传微信官方导出的 `.xlsx` 账单文件后，即可在浏览器中完成：
